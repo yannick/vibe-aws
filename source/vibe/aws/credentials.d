@@ -1,10 +1,10 @@
 module vibe.aws.credentials;
 
-
 /**
   AWS Credentials
  */
-struct AWSCredentials {
+struct AWSCredentials
+{
     string accessKeyID;
     string accessKeySecret;
     string sessionToken;
@@ -17,7 +17,8 @@ struct AWSCredentials {
   Credential Source is an active object, since credentials may change during
   the lifetime of the application
  */
-interface AWSCredentialSource {
+interface AWSCredentialSource
+{
     /**
       Retrieve the current set of credentials
      */
@@ -57,14 +58,22 @@ class StaticAWSCredentials : AWSCredentialSource
     }
 }
 
-import std.process : environment;
 class EnvAWSCredentials : StaticAWSCredentials
 {
     this()
     {
-        string accessKeyID = environment.get("AWS_ACCESS_KEY_ID", environment.get("AWS_ACCESS_KEY", "")  ) ;
-        string accessKeySecret = environment.get("AWS_SECRET_KEY", environment.get("AWS_SECRET_ACCESS_KEY", "")  ) ;
+        enum id0 = "AWS_ACCESS_KEY_ID";
+        enum id1 = "AWS_ACCESS_KEY";
+        enum se0 = "AWS_SECRET_KEY";
+        enum se1 = "AWS_SECRET_ACCESS_KEY";
+        import std.exception : enforce;
+        import std.process : environment;
+        string accessKeyID     = environment
+            .get(id0, environment.get(id1))
+            .enforce(id0 ~ " or " ~ id1 ~ " environment variables should be defined.");
+        string accessKeySecret = environment
+            .get(se0, environment.get(se1))
+            .enforce(se0 ~ " or " ~ se1 ~ " environment variables should be defined.");
         super(accessKeyID, accessKeySecret);
     }
-
 }
