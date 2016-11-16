@@ -1,10 +1,10 @@
 module vibe.aws.credentials;
 
-
 /**
   AWS Credentials
  */
-struct AWSCredentials {
+struct AWSCredentials
+{
     string accessKeyID;
     string accessKeySecret;
     string sessionToken;
@@ -17,7 +17,8 @@ struct AWSCredentials {
   Credential Source is an active object, since credentials may change during
   the lifetime of the application
  */
-interface AWSCredentialSource {
+interface AWSCredentialSource
+{
     /**
       Retrieve the current set of credentials
      */
@@ -57,14 +58,35 @@ class StaticAWSCredentials : AWSCredentialSource
     }
 }
 
-import std.process : environment;
+
+/// AWS Environment
+enum AwsEnvironment : string
+{
+    /// AWS_ACCESS_KEY_ID
+    idVariant0 = "AWS_ACCESS_KEY_ID",
+    /// AWS_ACCESS_KEY
+    idVariant1 = "AWS_ACCESS_KEY",
+    /// AWS_SECRET_KEY
+    secretVariant0 = "AWS_SECRET_KEY",
+    /// AWS_SECRET_ACCESS_KEY
+    secretVariant1 = "AWS_SECRET_ACCESS_KEY",
+}
+
 class EnvAWSCredentials : StaticAWSCredentials
 {
     this()
     {
-        string accessKeyID = environment.get("AWS_ACCESS_KEY_ID", environment.get("AWS_ACCESS_KEY", "")  ) ;
-        string accessKeySecret = environment.get("AWS_SECRET_KEY", environment.get("AWS_SECRET_ACCESS_KEY", "")  ) ;
-        super(accessKeyID, accessKeySecret);
+        import std.exception : enforce;
+        import std.process : environment;
+        with(AwsEnvironment)
+        {
+            string accessKeyID     = environment
+                .get(idVariant0, environment.get(idVariant1))
+                .enforce(idVariant0 ~ " or " ~ idVariant1 ~ " environment variables should be defined.");
+            string accessKeySecret = environment
+                .get(secretVariant0, environment.get(secretVariant1))
+                .enforce(secretVariant0 ~ " or " ~ secretVariant1 ~ " environment variables should be defined.");
+            super(accessKeyID, accessKeySecret);
+        }
     }
-
 }
